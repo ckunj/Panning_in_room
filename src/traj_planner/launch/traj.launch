@@ -1,0 +1,6 @@
+<launch>
+    <node name="rviz" pkg="rviz" type="rviz" output="log" args="-d $(find traj_planner)/rviz/traj_visual.rviz" />
+    <node name="map_generate" pkg="traj_planner" type="sdfMapGenerate" output="screen">
+
+    </node>
+</launch>
