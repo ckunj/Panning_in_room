@@ -9,6 +9,9 @@
 
 using namespace std;
 
+double mapSizeX, mapSizeY, mapSizeZ;
+double _resolution;
+double startX, startY, startZ;
 
 int main(int argc, char **argv)
 {
@@ -22,14 +25,20 @@ int main(int argc, char **argv)
     srand(ros::Time::now().toSec());
     ros::Duration(0.5).sleep();
 
+    // 获取仿真参数
+    node.param("map/resolution", _resolution);  // 定义每个方块（栅格）大小
+    node.param("map/map_size_x", mapSizeX, 30.0);  // 地图的大小
+    node.param("map/map_size_x", mapSizeY, 30.0);
+    node.param("map/map_size_x", mapSizeZ, 5.0);
+    node.param("planning/start_x", startX, 1.0);
+    node.param("planning/start_y", startY, 1.0);
+    node.param("planning/start_z", startZ, 3.0);
+
     //---------------------create a map using sdf_tools-----------------------------
 
     // sdf collision map parameter
-    const double resolution = 0.1;  // 定义每个方块（栅格）大小
-    const double x_size = 60.0;     // 地图的大小
-    const double z_size = 5.0;
-    double y_size = 60.0;
-    Eigen::Translation3d origin_translation(0.0, 0.0, 0.0); // 地图的原点不做平移
+    const double resolution = 0.2;  // 定义sdf地图每个方块（栅格）大小
+    Eigen::Translation3d origin_translation(-15.0, -15.0, 0.0); // 地图的原点平移
     Eigen::Quaterniond origin_rotation(1.0, 0.0, 0.0, 0.0);     // 不做旋转
     const Eigen::Isometry3d origin_transform = origin_translation * origin_rotation;  // 欧式变换，看上去为三维，实际上是4*4的矩阵
     const std ::string frame = "world";   // 地图的名字
@@ -39,8 +48,10 @@ int main(int argc, char **argv)
     cell.occupancy = 0.0;
     cell.component = 0;
     const sdf_tools ::COLLISION_CELL oob_cell = cell;
-    sdf_tools ::CollisionMapGrid collision_map(origin_transform, frame, resolution, x_size, y_size,
-                                                z_size, oob_cell);
+    sdf_tools ::CollisionMapGrid collision_map(origin_transform, frame, resolution, mapSizeX, mapSizeY,
+                                                mapSizeZ, oob_cell);
+    // sdf_tools ::CollisionMapGrid collision_map(origin_transform, frame, resolution, x_size, y_size,
+                                                // z_size, oob_cell);
 
     // add some obstacle randomly
     sdf_tools::COLLISION_CELL obstacle_cell(1.0);
@@ -53,8 +64,8 @@ int main(int argc, char **argv)
     {
         // randomly create a obstacle point
         Eigen::Vector3d pt; 
-        pt(0) = 2.0 + 26.0 * rand() / double(RAND_MAX);
-        pt(1) = 2.0 + 26.0 * rand() / double(RAND_MAX);
+        pt(0) = -13.0 + 26.0 * rand() / double(RAND_MAX);
+        pt(1) = -13.0 + 26.0 * rand() / double(RAND_MAX);
         pt(2) = 2.0;
 
         // ensure that each obstacle is far enough from others
@@ -94,8 +105,8 @@ int main(int argc, char **argv)
     cout << "----------------------Obstacles generated!----------------------" << endl;
 
     // add the generated obstacles into collision map
-    const int th = 2;
-    for(float z = 0; z < 3.5; z += resolution) {
+    const int th = 1;
+    for(float z = 0; z < mapSizeZ; z += resolution) {
         for(int i = 0; i < obstacles.size(); ++i)
         {
             for(int m = -th; m <= th; m++)
@@ -106,24 +117,26 @@ int main(int argc, char **argv)
                 }
         }
     }
-    // 构建围墙
-    for(float z = 0; z < 3.5; z += resolution) {
-        for(int m = 0; m < 300; m++)
-            collision_map.Set(m * resolution, 0.0, z, obstacle_cell);
-        for(int m = 0; m < 300; m++)
-            collision_map.Set(m * resolution, 30.0, z, obstacle_cell);
-        for(int m = 150; m < 299; m++)
-            collision_map.Set(m * resolution, 20.0, z, obstacle_cell);
-        for(int m = 1; m < 150; m++)
-            collision_map.Set(m * resolution, 10.0, z, obstacle_cell);
-        for(int n = 1; n < 299; n++)
-            collision_map.Set(0.0, n * resolution, z, obstacle_cell);
-        for(int n = 1; n < 299; n++)
-            collision_map.Set(30.0, n * resolution, z, obstacle_cell);
-        for(int n = 150; n < 299; n++)
-            collision_map.Set(10.0, n * resolution, z, obstacle_cell);
-        for(int n = 1; n < 150; n++)
-            collision_map.Set(20.0, n * resolution, z, obstacle_cell);
+    // 构建围墙 地图大小30*30*5 实际围墙内范围30*30*5
+    for(float z = 0; z < mapSizeZ; z += resolution) {
+        // 外围墙
+        for(int m = -75; m < 75; m++)
+            collision_map.Set(m * resolution, 14.9, z, obstacle_cell);   
+        for(int m = -75; m < 75; m++)
+            collision_map.Set(m * resolution, -15.0, z, obstacle_cell);
+        for(int n = -75; n < 75; n++)
+            collision_map.Set(14.9, n * resolution, z, obstacle_cell);
+        for(int n = -75; n < 75; n++)
+            collision_map.Set(-15.0, n * resolution, z, obstacle_cell);
+        //内围墙
+        for(int m = -15; m < 75; m++)
+            collision_map.Set(m * resolution, 7.5, z, obstacle_cell);
+        for(int m = -75; m < 15; m++)
+            collision_map.Set(m * resolution, -7.5, z, obstacle_cell);
+        for(int n = 15; n < 75; n++)
+            collision_map.Set(-7.5, n * resolution, z, obstacle_cell);
+        for(int n = -75; n < 15; n++)
+            collision_map.Set(7.5, n * resolution, z, obstacle_cell);
     }
         
     // visualize the collision map
@@ -156,8 +169,9 @@ int main(int argc, char **argv)
 
 
     // std::pair<float, bool> location_sdf_query = sdf.GetSafe(obstacles[0](0) , obstacles[0](1), obstacles[0](2));
-    std::pair<float, bool> location_sdf_query = sdf.GetSafe(obstacles[0](0) , obstacles[0](1), 3.5);
-    // std::pair<float, bool> location_sdf_query = sdf.GetSafe(0.0, 0.0, 0.0);
+    // std::pair<float, bool> location_sdf_query = sdf.GetSafe(obstacles[0](0) , obstacles[0](1), 3.5);
+    std::pair<float, bool> location_sdf_query = sdf.GetSafe(-14.0 , -14.0, 3.0);
+    // std::pair<float, bool> location_sdf_query = sdf.GetSafe(1.0, 1.0, 3.0);
     float dist = location_sdf_query.first;
     cout << "距离障碍物：" << dist << endl;
     return 0;

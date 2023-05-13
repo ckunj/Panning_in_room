@@ -28,8 +28,8 @@ include_directories(${PROJECT_SOURCE_DIR}/third_party/sdf_tools/include)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/arc_utilities/include)
 include_directories(${NLopt_INCLUDE_DIRS})
 
-add_executable(sdfMapGenerate src/sdf_map_generate.cpp)
-target_link_libraries(sdfMapGenerate ${catkin_LIBRARIES} ${NLopt_LIBRARIES} ${PROJECT_SOURCE_DIR}
+add_executable(traj_generate src/traj_generate.cpp)
+target_link_libraries(traj_generate ${catkin_LIBRARIES} ${NLopt_LIBRARIES} ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/lib/libnlopt.so.0.11.1)
 
 add_executable(click src/example_click.cpp src/qp_generator.cpp )

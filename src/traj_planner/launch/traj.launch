@@ -1,6 +1,24 @@
 <launch>
-    <node name="rviz" pkg="rviz" type="rviz" output="log" args="-d $(find traj_planner)/rviz/traj_visual.rviz" />
-    <node name="map_generate" pkg="traj_planner" type="sdfMapGenerate" output="screen">
 
+<arg name="map_size_x" default="10.0"/>
+<arg name="map_size_y" default="10.0"/>
+<arg name="map_size_z" default=" 5.0"/>
+
+<arg name="start_x" default=" 0.0"/>
+<arg name="start_y" default=" 0.0"/>
+<arg name="start_z" default=" 1.0"/>
+
+    <node name="map_generate" pkg="traj_planner" type="traj_generate" output="screen">
+        <param name="map/resolution"     value="0.1"/>
+
+        <param name="map/map_size_x"     value="$(arg map_size_x)"/>
+        <param name="map/map_size_y"     value="$(arg map_size_y)"/>
+        <param name="map/map_size_z"     value="$(arg map_size_z)"/>
+
+        <param name="planning/start_x"   value="$(arg start_x)"/>
+        <param name="planning/start_y"   value="$(arg start_y)"/>
+        <param name="planning/start_z"   value="$(arg start_z)"/>
     </node>
+
+    <node name="rviz" pkg="rviz" type="rviz" output="log" args="-d $(find traj_planner)/rviz/traj_visual.rviz" />
 </launch>
