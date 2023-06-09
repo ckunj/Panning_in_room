@@ -15,6 +15,6 @@
   roslaunch traj_planner traj.launch
 ```
 快捷键“Ctrl + G"选择目标点后 显示规划路径：
-  <div align=center>
-  <img src="https://github.com/ckunj/Panning_in_room/tree/master/src/pic/A*_result.gif" width = "360" height = "360">
-  </div>
+<div align=center>
+<img src="https://github.com/ckunj/Panning_in_room/blob/master/src/pic/A*_result.gif" width = "900" height = "600">
+</div>
