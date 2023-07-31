@@ -23,7 +23,9 @@
 <div align=center>
 <img src="https://github.com/ckunj/Panning_in_room/blob/master/src/pic/Traj_result.gif" width = "900" height = "600">
 </div>
+
 基于minimum Snap闭式求解方法主要思路是：
+
 1. 先确定轨迹阶数（比如$5$阶），再确定d向量中的约束量（pva），进而根据各段的时间分配求得$A_{total}$。
 2. 根据连续性约束构造映射矩阵$M$，并确定$d$向量中哪些量是Fix(比如起点终点pva，中间点的p等)，哪些量是Free，进而构造置换矩阵$C$，并求得$K=A^{−1}MC$。
 3. 计算QP目标函数中的$Q$（$minJerk/Snap$）并计算$R=K^TQK$，根据fix变量的长度将$R$拆分成$R_{FF},R_{FP},R_{PF},R_{PP}$四块。
