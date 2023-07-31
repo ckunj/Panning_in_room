@@ -31,3 +31,7 @@
 3. 计算QP目标函数中的$Q$（$minJerk/Snap$）并计算$R=K^TQK$，根据fix变量的长度将$R$拆分成$R_{FF},R_{FP},R_{PF},R_{PP}$四块。
 4. 填入已知变量得到$d_F$，并根据$d_P=−R_{PP}^{−1}R_{FP}^Td_F$计算得到$d_P$。
 5. 根据公式 $p=K\begin{bmatrix}d_F\\d_P\end{bmatrix}$计算得到轨迹参数$p$。
+
+## 3.参考文献
+Gao F, Lin Y, Shen S. Gradient-based online safe trajectory generation for quadrotor flight in complex environments[C]//2017 IEEE/RSJ international conference on intelligent robots and systems (IROS). IEEE, 2017: 3681-3688.
+
