@@ -6,6 +6,8 @@
 #include <visualization_msgs/Marker.h>
 #include "sdf_tools/collision_map.hpp"
 #include "sdf_tools/sdf.hpp"
+#include "display.h"
+#include "grad_traj_optimizer.h"
 
 #include "Astar_searcher.h"
 
@@ -15,6 +17,7 @@ using namespace Eigen;
 double mapSizeX, mapSizeY, mapSizeZ;
 double _resolution, invResolution;
 
+sdf_tools::SignedDistanceField sdf;
 
 Vector3d startPt;
 Vector3d mapLower, mapUpper;
@@ -26,15 +29,17 @@ ros::Publisher  _grid_path_vis_pub, _visited_nodes_vis_pub;
 
 AstarPathFinder* astarPathFinder = new AstarPathFinder();
 
+std::vector<Eigen::Vector3d> waypoints;
+
 void rcvWaypointsCallback(const geometry_msgs::PoseStamped::ConstPtr & msg);
 void visGridPath( vector<Vector3d> nodes );
 void visVisitedNode( vector<Vector3d> nodes );
 
-// 收到目标点开始A*搜索
+// 收到目标点开始A*搜索和minisnap算法
 void rcvWaypointsCallback(const geometry_msgs::PoseStamped::ConstPtr & msg) {
     // double targetX = wp.poses[0].pose.position.x, targetY = wp.poses[0].pose.position.y, targetZ = wp.poses[0].pose.position.z;
     double targetX = msg->pose.position.x, targetY = msg->pose.position.y, targetZ = msg->pose.position.z;
-    if (targetX < mapLower(0) || targetY < mapLower(1) || targetZ < mapLower(2) 
+    if (targetX < mapLower(0) || targetY < mapLower(1) || targetZ < mapLower(2)
         || targetX > mapUpper(0) || targetY > mapUpper(1) || targetZ > mapUpper(2)) return;
     Vector3d targetPt;
     targetPt << targetX , targetY , targetZ;
@@ -48,6 +53,38 @@ void rcvWaypointsCallback(const geometry_msgs::PoseStamped::ConstPtr & msg) {
     // 可视化路径和访问过的节点
     visGridPath (gridPath);
     visVisitedNode(visitedNodes);
+
+    //获取minisnap算法路径
+    waypoints.clear();
+    for (int i = 0; i < gridPath.size() - 5; i += 10) {
+        Eigen::Vector3d pt = gridPath[i];
+        waypoints.push_back(pt);
+    }
+    waypoints.push_back(gridPath[gridPath.size() - 1]);
+    // visualizeSetPoints(waypoints);
+    point_num = waypoints.size();
+
+    // ----------------------------main optimization procedure--------------------------
+    GradTrajOptimizer grad_traj_opt(waypoints);
+    grad_traj_opt.setSignedDistanceField(&sdf, _resolution); 
+
+    // 首先利用Minimum Snap算法基于软约束生成一条优化的轨迹
+    Eigen::MatrixXd coeff;
+    grad_traj_opt.getCoefficient(coeff);
+    grad_traj_opt.getSegmentTime(my_time);
+    displayTrajectory(coeff, false);
+
+    // first step optimization，对障碍代价函数进行优化迭代
+    grad_traj_opt.optimizeTrajectory(OPT_FIRST_STEP);
+    grad_traj_opt.getCoefficient(coeff);
+    displayTrajectory(coeff, false);
+
+    //  second step optimization，对速度、加速度代价函数进行优化迭代
+    grad_traj_opt.optimizeTrajectory(OPT_SECOND_STEP);
+    grad_traj_opt.getCoefficient(coeff);
+    displayTrajectory(coeff, true);
+
+
     // 重置节点信息
     astarPathFinder->resetUsedGrids();
 
@@ -64,8 +101,11 @@ int main(int argc, char **argv)
     // -------------------visulize endpoints and trajectory---------------------
     _grid_path_vis_pub            = node.advertise<visualization_msgs::Marker>("grid_path_vis", 1);
     _visited_nodes_vis_pub        = node.advertise<visualization_msgs::Marker>("visited_nodes_vis",1);
+    setpoint_pub = node.advertise<visualization_msgs::Marker>("trajopt/setpoint", 10);
+    traj_point_pub = node.advertise<visualization_msgs::Marker>("trajopt/traj_point", 10);
+    traj_pub = node.advertise<nav_msgs::Path>("trajopt/init_traj", 5);
     ros::Publisher visualization_pub =
-        node.advertise<visualization_msgs::Marker>("sdf_tools_tutorial_visualization", 1, true);
+    node.advertise<visualization_msgs::Marker>("sdf_tools_tutorial_visualization", 1, true);
 
 
     srand(ros::Time::now().toSec());
@@ -252,12 +292,8 @@ int main(int argc, char **argv)
     std::pair<sdf_tools::SignedDistanceField, std::pair<double, double>> sdf_with_extrema =
         collision_map.ExtractSignedDistanceField(oob_value);
 
-    sdf_tools::SignedDistanceField sdf = sdf_with_extrema.first;
+    sdf = sdf_with_extrema.first;
     cout << "----------------------Signed distance field build!----------------------" << endl;
-
-    //-----------------------------Wait for user to click waypoint--------------------
-    cout << "----------------------Please click some way_points----------------------- " << endl;
-
 
     // std::pair<float, bool> location_sdf_query = sdf.GetSafe(obstacles[0](0) , obstacles[0](1), obstacles[0](2));
     // std::pair<float, bool> location_sdf_query = sdf.GetSafe(obstacles[0](0) , obstacles[0](1), 3.5);

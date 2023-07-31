@@ -10,6 +10,8 @@ Panels:
         - /Marker1
         - /Marker1/Namespaces1
         - /Marker2
+        - /Marker3
+        - /Marker4
       Splitter Ratio: 0.5
     Tree Height: 539
   - Class: rviz/Selection
@@ -69,7 +71,7 @@ Visualization Manager:
       Marker Topic: /grid_path_vis
       Name: Marker
       Namespaces:
-        demo_node/astar_path: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -78,6 +80,46 @@ Visualization Manager:
       Name: Marker
       Namespaces:
         collision_map: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /trajopt/setpoint
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Billboards
+      Line Width: 0.029999999329447746
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Queue Size: 10
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic: /trajopt/init_traj
+      Unreliable: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /trajopt/traj_point
+      Name: Marker
+      Namespaces:
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -99,7 +141,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 62.247806549072266
+      Distance: 53.067874908447266
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -115,9 +157,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.0947965383529663
+      Pitch: 1.4497967958450317
       Target Frame: <Fixed Frame>
-      Yaw: 4.755515098571777
+      Yaw: 5.26551628112793
     Saved: ~
 Window Geometry:
   Displays:

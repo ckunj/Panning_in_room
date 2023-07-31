@@ -34,6 +34,7 @@ include_directories(${NLopt_INCLUDE_DIRS})
 add_executable(traj_generate
   src/traj_generate.cpp
   src/Astar_searcher.cpp
+  src/qp_generator.cpp
 )
 target_link_libraries(traj_generate 
   ${catkin_LIBRARIES}
@@ -41,7 +42,3 @@ target_link_libraries(traj_generate
   ${PROJECT_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/lib/libnlopt.so.0.11.1
 )
-
-add_executable(click src/example_click.cpp src/qp_generator.cpp )
-target_link_libraries(click ${catkin_LIBRARIES} ${NLopt_LIBRARIES} ${PROJECT_SOURCE_DIR}
-${PROJECT_SOURCE_DIR}/lib/libnlopt.so.0.11.1)

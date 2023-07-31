@@ -23,6 +23,7 @@ using namespace std;
 class GradTrajOptimizer
 {
 public:
+  GradTrajOptimizer(const vector<Eigen::Vector3d> &way_points);
   GradTrajOptimizer(ros::NodeHandle &node, const vector<Eigen::Vector3d> &waypoints);
 
   bool optimizeTrajectory(int step);
@@ -142,46 +143,45 @@ private:
   void tryDifferentParameter();
 };
 
-GradTrajOptimizer::GradTrajOptimizer(ros::NodeHandle &node,
-                                     const vector<Eigen::Vector3d> &way_points)
+GradTrajOptimizer::GradTrajOptimizer(const vector<Eigen::Vector3d> &way_points)
 {
   boundary = Eigen::VectorXd::Zero(6);  // 初始化全为0
 
   //-------------------------get parameter from server--------------------
-  ros::param::get("/traj_opti_node1/alg", this->algorithm);
-  ros::param::get("/traj_opti_node1/time_limit_1", this->time_limit_1);
-  ros::param::get("/traj_opti_node1/time_limit_2", this->time_limit_2);
-  ros::param::get("/traj_opti_node1/try_limit", this->try_limit);
-  ros::param::get("/traj_opti_node1/offset", this->offset);
-  ros::param::get("/traj_opti_node1/dt", this->deltat);
-  ros::param::get("/traj_opti_node1/retry_offset", this->retry_offset);
+  ros::param::get("/traj_generate/alg", this->algorithm);
+  ros::param::get("/traj_generate/time_limit_1", this->time_limit_1);
+  ros::param::get("/traj_generate/time_limit_2", this->time_limit_2);
+  ros::param::get("/traj_generate/try_limit", this->try_limit);
+  ros::param::get("/traj_generate/offset", this->offset);
+  ros::param::get("/traj_generate/dt", this->deltat);
+  ros::param::get("/traj_generate/retry_offset", this->retry_offset);
 
-  ros::param::get("/traj_opti_node1/ws", this->w_smooth);
-  ros::param::get("/traj_opti_node1/wc", this->w_collision);
-  ros::param::get("/traj_opti_node1/wc", this->w_collision_temp);
+  ros::param::get("/traj_generate/ws", this->w_smooth);
+  ros::param::get("/traj_generate/wc", this->w_collision);
+  ros::param::get("/traj_generate/wc", this->w_collision_temp);
 
-  ros::param::get("/traj_opti_node1/alpha", this->alpha);
-  ros::param::get("/traj_opti_node1/r", this->r);
-  ros::param::get("/traj_opti_node1/d0", this->d0);
+  ros::param::get("/traj_generate/alpha", this->alpha);
+  ros::param::get("/traj_generate/r", this->r);
+  ros::param::get("/traj_generate/d0", this->d0);
 
-  ros::param::get("/traj_opti_node1/alphav", this->alphav);
-  ros::param::get("/traj_opti_node1/rv", this->rv);
-  ros::param::get("/traj_opti_node1/v0", this->v0);
+  ros::param::get("/traj_generate/alphav", this->alphav);
+  ros::param::get("/traj_generate/rv", this->rv);
+  ros::param::get("/traj_generate/v0", this->v0);
 
-  ros::param::get("/traj_opti_node1/alphaa", this->alphaa);
-  ros::param::get("/traj_opti_node1/ra", this->ra);
-  ros::param::get("/traj_opti_node1/a0", this->a0);
+  ros::param::get("/traj_generate/alphaa", this->alphaa);
+  ros::param::get("/traj_generate/ra", this->ra);
+  ros::param::get("/traj_generate/a0", this->a0);
 
-  ros::param::get("/traj_opti_node1/bos", this->bos);
-  ros::param::get("/traj_opti_node1/vos", this->vos);
-  ros::param::get("/traj_opti_node1/aos", this->aos);
+  ros::param::get("/traj_generate/bos", this->bos);
+  ros::param::get("/traj_generate/vos", this->vos);
+  ros::param::get("/traj_generate/aos", this->aos);
 
-  ros::param::get("/traj_opti_node1/gd_value", this->gd_value);
-  ros::param::get("/traj_opti_node1/gd_type", this->gd_type);
+  ros::param::get("/traj_generate/gd_value", this->gd_value);
+  ros::param::get("/traj_generate/gd_type", this->gd_type);
 
-  ros::param::get("/traj_opti_node1/segment_time", sgm_time);
-  ros::param::get("/traj_opti_node1/mean_v", mean_v); 
-  ros::param::get("/traj_opti_node1/init_time", init_time);
+  ros::param::get("/traj_generate/segment_time", sgm_time);
+  ros::param::get("/traj_generate/mean_v", mean_v); 
+  ros::param::get("/traj_generate/init_time", init_time);
 
   //------------------------generate optimization dependency------------------
 
@@ -366,7 +366,7 @@ bool GradTrajOptimizer::optimizeTrajectory(int step)
   nlopt::srand(seed);
   nlopt::opt opt(nlopt::algorithm(this->algorithm), 3 * num_dp);  // x,y,z (3*m-3) x 3
   optimizer = opt;
-  optimizer.set_min_objective(GradTrajOptimizer::costFunc, this); // 
+  optimizer.set_min_objective(GradTrajOptimizer::costFunc, this); // 二次规划主要函数
   // optimizer.set_xtol_abs(1e-7);
 
   // --------------------------step specific options-----------------------------
